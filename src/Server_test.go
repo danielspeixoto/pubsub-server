@@ -1,4 +1,4 @@
-package presentation
+package src
 
 import (
 	"log"
@@ -10,7 +10,7 @@ import (
 
 func TestUDPServer(t *testing.T) {
 	port := 10001
-	go StartServer(port)
+	go StartServer(port, time.Second)
 	t.Run("A client can subscribe to state changes", func(t *testing.T) {
 		ServerAddr, err :=
 			net.ResolveUDPAddr("udp", "127.0.0.1:"+strconv.Itoa(port))
@@ -31,11 +31,31 @@ func TestUDPServer(t *testing.T) {
 		defer Conn.Close()
 
 		i := 0
-		msg := "sub"
-		buf := []byte(msg)
+		msg := Message{
+			Timestamp: time.Now().Unix(),
+			Type:      "sub",
+			Message:   "",
+		}
+		buf, err := GetBytes(msg)
+		if err != nil {
+			t.Fatal(err)
+		}
 		_, err = Conn.Write(buf)
 		if err != nil {
 			t.Fatal(err)
+		}
+		buffer := make([]byte, 1024)
+		n, _, err := Conn.ReadFromUDP(buffer)
+		if err != nil {
+			t.Fatal(err)
+		}
+		response, err := GetMessage(buffer[:n])
+		if err != nil {
+			t.Fatal(err)
+		}
+		log.Println("msg received from server is: " + response.Message)
+		if "ok" != response.Message {
+			t.Fatal("ack not received properly")
 		}
 		for {
 			if i > 3 {
@@ -46,9 +66,12 @@ func TestUDPServer(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			response := string(buffer[:n])
-			log.Println("msg received from server is: " + response)
-			if "started" != response {
+			response, err := GetMessage(buffer[:n])
+			if err != nil {
+				t.Fatal(err)
+			}
+			log.Println("msg received from server is: " + response.Message)
+			if "started" != response.Message {
 				t.Fatal("state not received properly")
 			}
 			time.Sleep(time.Second * 1)
@@ -84,11 +107,31 @@ func TestUDPServer(t *testing.T) {
 				defer Conn.Close()
 
 				j := 0
-				msg := "sub"
-				buf := []byte(msg)
+				msg := Message{
+					Timestamp: time.Now().Unix(),
+					Type:      "sub",
+					Message:   "",
+				}
+				buf, err := GetBytes(msg)
+				if err != nil {
+					t.Fatal(err)
+				}
 				_, err = Conn.Write(buf)
 				if err != nil {
 					t.Fatal(err)
+				}
+				buffer := make([]byte, 1024)
+				n, _, err := Conn.ReadFromUDP(buffer)
+				if err != nil {
+					t.Fatal(err)
+				}
+				response, err := GetMessage(buffer[:n])
+				if err != nil {
+					t.Fatal(err)
+				}
+				log.Println("msg received from server is: " + response.Message)
+				if "ok" != response.Message {
+					t.Fatal("ack not received properly")
 				}
 				for {
 					if j > 3 {
@@ -100,9 +143,12 @@ func TestUDPServer(t *testing.T) {
 						// May Fail because it is UDP ¯\_(ツ)_/¯
 						t.Fatal(err)
 					}
-					response := string(buffer[:n])
-					log.Println("msg received from server is: " + response)
-					if "started" != response {
+					response, err := GetMessage(buffer[:n])
+					if err != nil {
+						t.Fatal(err)
+					}
+					log.Println("msg received from server is: " + response.Message)
+					if "started" != response.Message {
 						t.Fatal("state not received properly")
 					}
 					time.Sleep(time.Second * 1)
@@ -133,8 +179,15 @@ func TestUDPServer(t *testing.T) {
 		}
 		defer Conn.Close()
 
-		msg := "state update:ok"
-		buf := []byte(msg)
+		msg := Message{
+			Timestamp: time.Now().Unix(),
+			Type:      "update",
+			Message:   "ok",
+		}
+		buf, err := GetBytes(msg)
+		if err != nil {
+			t.Fatal(err)
+		}
 		_, err = Conn.Write(buf)
 		if err != nil {
 			t.Fatal(err)
@@ -161,11 +214,31 @@ func TestUDPServer(t *testing.T) {
 		defer Conn.Close()
 
 		i := 0
-		msg = "sub"
-		buf = []byte(msg)
+		msg = Message{
+			Timestamp: time.Now().Unix(),
+			Type:      "sub",
+			Message:   "",
+		}
+		buf, err = GetBytes(msg)
+		if err != nil {
+			t.Fatal(err)
+		}
 		_, err = Conn.Write(buf)
 		if err != nil {
 			t.Fatal(err)
+		}
+		buffer := make([]byte, 1024)
+		n, _, err := Conn.ReadFromUDP(buffer)
+		if err != nil {
+			t.Fatal(err)
+		}
+		response, err := GetMessage(buffer[:n])
+		if err != nil {
+			t.Fatal(err)
+		}
+		log.Println("msg received from server is: " + response.Message)
+		if "ok" != response.Message {
+			t.Fatal("ack not received properly")
 		}
 		for {
 			if i > 3 {
@@ -176,9 +249,12 @@ func TestUDPServer(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			response := string(buffer[:n])
-			log.Println("msg received from server is: " + response)
-			if "ok" != response {
+			response, err := GetMessage(buffer[:n])
+			if err != nil {
+				t.Fatal(err)
+			}
+			log.Println("msg received from server is: " + response.Message)
+			if "ok" != response.Message {
 				t.Fatal("state not received properly")
 			}
 			time.Sleep(time.Second * 1)

@@ -1,10 +1,11 @@
 package main
 
 import (
-	"pubsub/src/presentation"
+	"pubsub/src"
+	"time"
 )
 
 func main() {
-	presentation.StartServer(10001)
+	src.StartServer(10001, time.Millisecond * 250)
 }
 

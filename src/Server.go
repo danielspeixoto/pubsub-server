@@ -12,7 +12,7 @@ import (
 type Message struct {
 	Timestamp int64
 	Type      string
-	Message   string
+	Message   []byte
 }
 
 // Converts an interface to byte array
@@ -35,7 +35,7 @@ func GetMessage(buff []byte) (Message, error) {
 }
 
 func StartServer(port int, period time.Duration) {
-	packetConn, err := net.ListenPacket("udp", ":"+strconv.Itoa(port))
+	packetConn, err := net.ListenPacket("udp", ":" + strconv.Itoa(port))
 	log.Println("server running on port " + string(port))
 	if err != nil {
 		log.Fatal(err)
@@ -47,7 +47,7 @@ func StartServer(port int, period time.Duration) {
 		}
 	}()
 
-	state := "started"
+	state := []byte("started")
 	addrs := make([]net.Addr, 0)
 	log.Println("list of subs created and empty")
 	// Periodically send status update to all subs
@@ -63,7 +63,7 @@ func StartServer(port int, period time.Duration) {
 				log.Println("sending package to " + addr.String())
 				_, err = packetConn.WriteTo(buff, addr)
 				if err != nil {
-					log.Fatal(err)
+					log.Println(err)
 				}
 			}
 			time.Sleep(period)
@@ -104,7 +104,7 @@ func StartServer(port int, period time.Duration) {
 		buff, err := GetBytes(Message{
 			Timestamp: time.Now().Unix(),
 			Type:      "ack",
-			Message:   "ok",
+			Message:   []byte("ok"),
 		})
 		_, err = packetConn.WriteTo(buff, addr)
 		if err != nil {
